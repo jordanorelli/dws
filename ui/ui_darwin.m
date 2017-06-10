@@ -1,9 +1,11 @@
 #include <Cocoa/Cocoa.h>
+#include "AppDelegate.h"
 
 void
 Initialize(void) {
     [NSAutoreleasePool new];
     [NSApplication sharedApplication];
+	[NSApp setDelegate: [AppDelegate new]];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 }
 
