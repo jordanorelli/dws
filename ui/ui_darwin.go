@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"log"
 	"runtime"
 )
 
@@ -13,6 +14,7 @@ import "C"
 
 func NewDesktop() (UI, error) {
 	runtime.LockOSThread()
+	log.Println("Creating new cocoaUI")
 	return new(cocoaUI), nil
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -30,10 +31,13 @@ func must(fn failable, status int, msg string) {
 }
 
 func main() {
+	log.Println("Creating new Desktop UI")
 	ui, err := ui.NewDesktop()
 	if err != nil {
 		exit(1, "unable to create desktop ui: %s", err)
 	}
+	log.Println("Initializing Desktop UI")
 	must(ui.Init, 1, "unable to initialize desktop ui")
+	log.Println("Running Desktop UI")
 	must(ui.Run, 1, "unable to run desktop ui")
 }
