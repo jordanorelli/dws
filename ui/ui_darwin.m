@@ -10,13 +10,10 @@ void Initialize(void) {
     defaultAutoreleasePool = [NSAutoreleasePool new];
     [NSApplication sharedApplication];
     NSLog(@"Setting App Delegate");
-    appDelegate = [AppDelegate new];
-    [appDelegate createMenuBar];
-    [NSApp setDelegate: appDelegate];
+    [NSApp setDelegate: [[AppDelegate new] autorelease]];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     NSLog(@"Initialization complete");
 }
-
 
 int Run(void) {
     NSLog(@"Entered Run");

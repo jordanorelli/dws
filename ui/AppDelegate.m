@@ -12,6 +12,8 @@
 - (void) applicationDidFinishLaunching:(NSNotification *)notification {
     NSLog(@"applicationDidFinishLaunching notification: %@", notification);
     NSLog(@"Main Menu in applicationDidFinishLaunching: %@", [NSApp mainMenu]);
+    [self createMenubar];
+    [self createMainWindow];
     [NSApp activateIgnoringOtherApps:YES];
 }
 
@@ -84,28 +86,48 @@
 // --------------------------------------------------------------------------}}}
 // Menu Bar -----------------------------------------------------------------{{{
 
-- (void) createMenuBar {
+- (void) createMenubar {
     NSLog(@"Will create menu bar here");
     NSLog(@"creating menu bar. initial main menu bar: %@", [NSApp mainMenu]);
 
-    id mainMenu = [NSMenu alloc];
+    id mainMenu = [[NSMenu alloc] autorelease];
     [mainMenu initWithTitle:@"Main Menu"];
     [NSApp setMainMenu:mainMenu];
 
-    id appMenuItem = [NSMenuItem alloc];
+    id appMenuItem = [[NSMenuItem alloc] autorelease];
     [appMenuItem initWithTitle:@"dws" action:NULL keyEquivalent:@""];
     [mainMenu addItem:appMenuItem];
 
-    id appMenu = [NSMenu alloc];
+    id appMenu = [[NSMenu alloc] autorelease];
     [appMenu initWithTitle:@"dws"];
     [appMenuItem setSubmenu:appMenu];
 
-    id quitMenuItem = [NSMenuItem alloc];
+    id quitMenuItem = [[NSMenuItem alloc] autorelease];
     [quitMenuItem initWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
     [appMenu addItem:quitMenuItem];
     NSLog(@"assigned to main menu: %@", [NSApp mainMenu]);
 }
 
 // --------------------------------------------------------------------------}}}
+// Main Window --------------------------------------------------------------{{{
+
+- (void) createMainWindow {
+    NSUInteger windowStyle = NSTitledWindowMask
+                           | NSClosableWindowMask
+                           | NSResizableWindowMask;
+
+    id window = [NSWindow alloc];
+    [window initWithContentRect:NSMakeRect(0, 0, 640, 480)
+                      styleMask:windowStyle
+                        backing:NSBackingStoreBuffered
+                          defer:NO];
+
+    [window cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
+    [window setTitle:@"dws"];
+    [window makeKeyAndOrderFront:NSApp];
+}
+
+// --------------------------------------------------------------------------}}}
+
 @end
 
