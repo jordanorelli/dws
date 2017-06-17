@@ -21,23 +21,19 @@ func exit(status int, t string, args ...interface{}) {
 	os.Exit(status)
 }
 
-type failable func() error
-
-func must(fn failable, status int, msg string) {
-	msg = strings.TrimSpace(msg)
-	if err := fn(); err != nil {
-		exit(status, "%s: %s", msg, err)
-	}
-}
-
 func main() {
 	log.Println("Creating new Desktop UI")
-	ui, err := ui.NewDesktop()
-	if err != nil {
-		exit(1, "unable to create desktop ui: %s", err)
-	}
-	log.Println("Initializing Desktop UI")
-	must(ui.Init, 1, "unable to initialize desktop ui")
+	desktop := ui.Desktop()
+
+	c := make(chan ui.Event, 1)
+	go func() {
+		for e := range c {
+			log.Printf("UI Event: %v\n", e)
+		}
+	}()
+
 	log.Println("Running Desktop UI")
-	must(ui.Run, 1, "unable to run desktop ui")
+	if err := desktop.Run(c); err != nil {
+		exit(1, "UI Error: %v", err)
+	}
 }

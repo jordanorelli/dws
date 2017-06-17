@@ -12,21 +12,31 @@ import (
 */
 import "C"
 
-func NewDesktop() (UI, error) {
-	runtime.LockOSThread()
+var desktopUI *cocoaUI
+
+func Desktop() UI {
+	if desktopUI != nil {
+		return desktopUI
+	}
+
 	log.Println("Creating new cocoaUI")
-	return new(cocoaUI), nil
+	runtime.LockOSThread()
+	C.Initialize()
+	desktopUI = new(cocoaUI)
+	return desktopUI
 }
 
 type cocoaUI struct {
+	out chan Event
 }
 
-func (ui *cocoaUI) Init() error {
-	C.Initialize()
-	return nil
-}
-
-func (ui *cocoaUI) Run() error {
+func (ui *cocoaUI) Run(out chan Event) error {
+	ui.out = out
 	C.Run()
 	return nil
+}
+
+//export selectDirectory
+func selectDirectory(path string) {
+	desktopUI.out <- SelectDirectoryEvent{Path: path}
 }

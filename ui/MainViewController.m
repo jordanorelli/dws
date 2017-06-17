@@ -1,3 +1,4 @@
+#import "_cgo_export.h"
 #import "MainViewController.h"
 #import "MainView.h"
 
@@ -27,12 +28,11 @@
     self.selectDirectoryPanel = [NSOpenPanel openPanel];
     [self.selectDirectoryPanel setCanChooseFiles:NO];
     [self.selectDirectoryPanel setCanChooseDirectories:YES];
-    [self.selectDirectoryPanel setDelegate:self];
 
     // create select directory button
     self.selectDirectoryButton = [NSButton buttonWithTitle:@"select directory"
-                                                    target:self.selectDirectoryPanel
-                                                    action:@selector(runModal)];
+                                                    target:self
+                                                    action:@selector(selectDirectory)];
     [self.selectDirectoryButton setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.view addSubview:self.selectDirectoryButton];
 
@@ -45,9 +45,17 @@
                        constant:8.0].active = YES;
 }
 
-- (void) panel:(id)sender didChangeToDirectoryURL:(NSURL *)url {
-    NSLog(@"[MainViewController] panel: %@ didChangeToDirectoryURL: %@", sender, url);
-    return [super viewWillAppear];
+- (void) selectDirectory {
+    NSLog(@"[MainViewController] select directory start");
+    [self.selectDirectoryPanel beginWithCompletionHandler:^(NSInteger result) {
+        if (result != NSFileHandlingPanelOKButton) {
+            NSLog(@"[MainViewController] user canceled select directory window");
+            return;
+        }
+        NSURL *selected = [[self.selectDirectoryPanel URLs] objectAtIndex:0];
+        NSString *path = [selected path];
+        selectDirectory((GoString){path.UTF8String, path.length});
+    }];
 }
 
 - (void) viewWillAppear {
