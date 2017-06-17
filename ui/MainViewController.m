@@ -1,32 +1,40 @@
 #import "MainViewController.h"
-#import <objc/runtime.h>
 #import "MainView.h"
 
-@implementation MainViewController {
-    NSButton *firstButton; 
-}
+@interface MainViewController ()
+
+@property (nonatomic, strong) NSButton *selectDirectoryButton;
+
+@end
+
+@implementation MainViewController
 
 - (void) loadView {
     NSLog(@"[MainViewController] loadView");
-    self.view = [[MainView alloc] initWithFrame:NSMakeRect(0, 0, 640, 480)];
+    self.view = [[MainView alloc] init];
 }
 
 - (void) viewDidLoad {
     NSLog(@"[MainViewController] viewDidLoad");
     [super viewDidLoad];
 
-    firstButton = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 120, 20)];
-    [firstButton setButtonType:NSToggleButton];
-    [firstButton setTitle:@"fart"];
+    [self.view.widthAnchor constraintGreaterThanOrEqualToConstant:640.0].active = YES;
+    [self.view.heightAnchor constraintGreaterThanOrEqualToConstant:480.0].active = YES;
 
-    int i=0;
-    unsigned int mc = 0;
-    Method * mlist = class_copyMethodList(object_getClass(firstButton), &mc);
-    NSLog(@"%d methods", mc);
-    for(i=0;i<mc;i++)
-        NSLog(@"Method no #%d: %s", i, sel_getName(method_getName(mlist[i])));
+    self.selectDirectoryButton = [NSButton buttonWithTitle:@"select directory"
+                                                    target:self
+                                                    action:@selector(fart:)];
+    [self.selectDirectoryButton setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-    [self.view addSubview:firstButton];
+
+    [self.view addSubview:self.selectDirectoryButton];
+
+    [self.selectDirectoryButton.rightAnchor
+        constraintEqualToAnchor:self.view.rightAnchor
+                       constant:-8.0].active = YES;
+    [self.selectDirectoryButton.topAnchor
+        constraintEqualToAnchor:self.view.topAnchor
+                       constant:8.0].active = YES;
 }
 
 - (void) viewWillAppear {
@@ -58,4 +66,9 @@
     NSLog(@"[MainViewController] viewDidLayout");
     return [super viewDidLayout];
 }
+
+- (void) fart {
+    NSLog(@"[MainViewController] fart!");
+}
+
 @end
