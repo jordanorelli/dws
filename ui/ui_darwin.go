@@ -42,21 +42,35 @@ func (ui *cocoaUI) Run(out chan events.UserEvent, in chan events.BackgroundEvent
 	return nil
 }
 
+func (ui *cocoaUI) forwardEvent(e events.BackgroundEvent) {
+	switch v := e.(type) {
+	case events.SigIntEvent:
+		log.Println("Cocoa UI sees sig int, forwarding to NSApp")
+		C.shutdown()
+
+	case events.SetRootEvent:
+		cpath := C.CString(v.Path)
+		defer C.free(unsafe.Pointer(cpath))
+		C.set_root(cpath)
+
+	case events.BeginRequestEvent:
+		cpath := C.CString(v.Path)
+		defer C.free(unsafe.Pointer(cpath))
+
+		req := &C.struct_RequestMeta{
+			path: cpath,
+		}
+
+		C.begin_request(req)
+
+	case events.EndRequestEvent:
+		C.end_request()
+	}
+}
+
 func (ui *cocoaUI) forwardEvents() {
 	for e := range ui.in {
-		switch v := e.(type) {
-		case events.SigIntEvent:
-			log.Println("Cocoa UI sees sig int, forwarding to NSApp")
-			C.shutdown()
-		case events.SetRootEvent:
-			cs := C.CString(v.Path)
-			C.set_root(cs)
-			C.free(unsafe.Pointer(cs))
-		case events.BeginRequestEvent:
-			C.begin_request()
-		case events.EndRequestEvent:
-			C.end_request()
-		}
+		ui.forwardEvent(e)
 	}
 }
 

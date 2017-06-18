@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import "AppDelegate.h"
 #import "EventBridge.h"
+#import "ui_darwin.h"
 
 id defaultAutoreleasePool;
 id appDelegate;
@@ -27,9 +28,9 @@ void set_root(char *path) {
 	[listener serverDidSetRoot:[NSString stringWithUTF8String:path]];
 }
 
-void begin_request() {
+void begin_request(RequestMeta *meta) {
 	id listener = [[EventBridge shared] listener];
-	[listener serverDidBeginHandlingRequest];
+	[listener serverDidBeginHandlingRequest:meta];
 }
 
 void end_request() {

@@ -17,6 +17,7 @@ type SetRootEvent struct {
 }
 
 type BeginRequestEvent struct {
+	Path string
 	backgroundEvent
 }
 

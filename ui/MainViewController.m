@@ -79,8 +79,8 @@
 	[self.selectedDirectoryText setStringValue:path];
 }
 
-- (void) serverDidBeginHandlingRequest {
-	NSLog(@"[MainViewController] request start");
+- (void) serverDidBeginHandlingRequest:(RequestMeta *)meta {
+	NSLog(@"[MainViewController] request start: %s", meta->path);
 }
 
 - (void) serverDidFinishHandlingRequest {

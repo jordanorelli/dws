@@ -28,7 +28,9 @@ func (s *server) setRoot(path string) {
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.out <- events.BeginRequestEvent{}
+	s.out <- events.BeginRequestEvent{
+		Path: r.URL.Path,
+	}
 	if s.root == "" {
 		writeNotInitializedResponse(w)
 		return
