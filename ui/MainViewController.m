@@ -75,38 +75,16 @@
     }];
 }
 
-- (void) viewWillAppear {
-    NSLog(@"[MainViewController] viewWillAppear");
-    return [super viewWillAppear];
-}
-
-- (void) viewDidAppear {
-    NSLog(@"[MainViewController] viewDidAppear");
-    return [super viewDidAppear];
-}
-
-- (void) viewWillDisappear {
-    NSLog(@"[MainViewController] viewWillDisappear");
-    return [super viewWillDisappear];
-}
-
-- (void) viewDidDisappear {
-    NSLog(@"[MainViewController] viewDidDisappear");
-    return [super viewDidDisappear];
-}
-
-- (void) viewWillLayout {
-    NSLog(@"[MainViewController] viewWillLayout");
-    return [super viewWillLayout];
-}
-
-- (void) viewDidLayout {
-    NSLog(@"[MainViewController] viewDidLayout");
-    return [super viewDidLayout];
-}
-
 - (void) serverDidSetRoot:(NSString *)path {
 	[self.selectedDirectoryText setStringValue:path];
+}
+
+- (void) serverDidBeginHandlingRequest {
+	NSLog(@"[MainViewController] request start");
+}
+
+- (void) serverDidFinishHandlingRequest {
+	NSLog(@"[MainViewController] request finish");
 }
 
 @end

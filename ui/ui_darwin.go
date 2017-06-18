@@ -52,6 +52,10 @@ func (ui *cocoaUI) forwardEvents() {
 			cs := C.CString(v.Path)
 			C.set_root(cs)
 			C.free(unsafe.Pointer(cs))
+		case events.BeginRequestEvent:
+			C.begin_request()
+		case events.EndRequestEvent:
+			C.end_request()
 		}
 	}
 }

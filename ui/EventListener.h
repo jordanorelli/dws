@@ -2,5 +2,7 @@
 
 @protocol EventListener
 - (void) serverDidSetRoot:(NSString *)path;
+- (void) serverDidBeginHandlingRequest;
+- (void) serverDidFinishHandlingRequest;
 @end
 

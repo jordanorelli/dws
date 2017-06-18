@@ -9,9 +9,12 @@ import (
 
 func Run(out chan events.BackgroundEvent, in chan events.UserEvent) {
 	bg := &background{
-		in:     in,
-		out:    out,
-		server: newServer(),
+		in:  in,
+		out: out,
+		server: &server{
+			port: 8000,
+			out:  out,
+		},
 	}
 	go bg.handleSignals()
 	go bg.listen()

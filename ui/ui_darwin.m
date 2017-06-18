@@ -26,3 +26,13 @@ void set_root(char *path) {
 	id listener = [[EventBridge shared] listener];
 	[listener serverDidSetRoot:[NSString stringWithUTF8String:path]];
 }
+
+void begin_request() {
+	id listener = [[EventBridge shared] listener];
+	[listener serverDidBeginHandlingRequest];
+}
+
+void end_request() {
+	id listener = [[EventBridge shared] listener];
+	[listener serverDidFinishHandlingRequest];
+}

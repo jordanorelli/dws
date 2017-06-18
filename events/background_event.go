@@ -15,3 +15,11 @@ type SetRootEvent struct {
 	Path string
 	backgroundEvent
 }
+
+type BeginRequestEvent struct {
+	backgroundEvent
+}
+
+type EndRequestEvent struct {
+	backgroundEvent
+}

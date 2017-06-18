@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/jordanorelli/dws/events"
 )
 
 type server struct {
 	port int
 	root string
-}
-
-func newServer() *server {
-	return &server{port: 8000}
+	out  chan events.BackgroundEvent
 }
 
 func (s *server) listen() {
@@ -29,11 +28,13 @@ func (s *server) setRoot(path string) {
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.out <- events.BeginRequestEvent{}
 	if s.root == "" {
 		writeNotInitializedResponse(w)
 		return
 	}
 	fmt.Fprintf(w, "root: %s", s.root)
+	s.out <- events.EndRequestEvent{}
 }
 
 func writeNotInitializedResponse(w http.ResponseWriter) {
