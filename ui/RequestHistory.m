@@ -20,7 +20,22 @@
 
 - (id) tableView:(NSTableView *)view objectValueForTableColumn:(NSTableColumn *)column row:(NSInteger) row {
 	NSLog(@"[RequestHistory] objectValueForTableColumn: %@ row: %zd", column, row);
-	return [[self items] objectAtIndex:row];
+	NSValue *val = [[self items] objectAtIndex:row];
+	if (!val) {
+		return nil;
+	}
+	RequestMeta meta;
+	[val getValue:&meta];
+
+	if ([[column identifier] isEqualToString:@"id"]) {
+		return [NSNumber numberWithInt:meta.seq];
+	} else if ([[column identifier] isEqualToString:@"status"]) {
+		return @"???";
+	} else if ([[column identifier] isEqualToString:@"path"]) {
+		return [NSString stringWithUTF8String:meta.path];
+	} else {
+		return @"fuck";
+	}
 }
 
 - (void) addRequestItem:(RequestMeta *)meta {
