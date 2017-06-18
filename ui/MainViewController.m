@@ -8,6 +8,8 @@
 @property (nonatomic, strong) NSOpenPanel *selectDirectoryPanel;
 @property (nonatomic, strong) NSButton *selectDirectoryButton;
 @property (nonatomic, strong) NSTextField *selectedDirectoryText;
+@property (nonatomic, strong) NSScrollView *historyContainer;
+@property (nonatomic, strong) NSTableView *historyTable;
 
 @end
 
@@ -26,23 +28,68 @@
     [self.view.widthAnchor constraintGreaterThanOrEqualToConstant:640.0].active = YES;
     [self.view.heightAnchor constraintGreaterThanOrEqualToConstant:480.0].active = YES;
 
-    // create open panel
+	[self createOpenPanel];
+	[self createDirectoryButton];
+	[self createDirectoryLabel];
+	[self createHistoryTable];
+	[self createLayoutConstraints];
+
+	[[EventBridge shared] setListener:self];
+}
+
+- (void) createOpenPanel {
     self.selectDirectoryPanel = [NSOpenPanel openPanel];
     [self.selectDirectoryPanel setCanChooseFiles:NO];
     [self.selectDirectoryPanel setCanChooseDirectories:YES];
+}
 
-    // create select directory button
+- (void) createDirectoryButton {
     self.selectDirectoryButton = [NSButton buttonWithTitle:@"select directory"
                                                     target:self
                                                     action:@selector(selectDirectory)];
     [self.selectDirectoryButton setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.view addSubview:self.selectDirectoryButton];
+}
 
-    // create label to show selected directory
+- (void) createDirectoryLabel {
 	self.selectedDirectoryText = [NSTextField labelWithString:@"no directory selected"];
     [self.selectedDirectoryText setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[self.view addSubview:self.selectedDirectoryText];
+}
 
+- (void) createHistoryTable {
+	NSScrollView *tableContainer = [[NSScrollView alloc] init];
+	[tableContainer setTranslatesAutoresizingMaskIntoConstraints:NO];
+	[tableContainer setHasVerticalScroller:YES];
+	[tableContainer setFocusRingType:NSFocusRingTypeNone];
+	[self.view addSubview:tableContainer];
+
+	NSTableView *tableView = [[NSTableView alloc] init];
+	[tableView setTranslatesAutoresizingMaskIntoConstraints:NO];
+	[tableView setFocusRingType:NSFocusRingTypeNone];
+	[tableView setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleNone];
+
+	NSTableColumn *idColumn = [[NSTableColumn alloc] initWithIdentifier:@"id"];
+	[idColumn setTitle:@"id"];
+	[idColumn setWidth:100];
+	[tableView addTableColumn:idColumn];
+
+	NSTableColumn *statusColumn = [[NSTableColumn alloc] initWithIdentifier:@"status"];
+	[statusColumn setTitle:@"status"];
+	[statusColumn setWidth:100];
+	[tableView addTableColumn:statusColumn];
+
+	NSTableColumn *pathColumn = [[NSTableColumn alloc] initWithIdentifier:@"path"];
+	[pathColumn setTitle:@"path"];
+	[pathColumn setWidth:200];
+	[tableView addTableColumn:pathColumn];
+
+	[tableContainer setDocumentView:tableView];
+	[self setHistoryContainer:tableContainer];
+	[self setHistoryTable:tableView];
+}
+
+- (void) createLayoutConstraints {
     // place button in top right
     [self.selectDirectoryButton.rightAnchor
         constraintEqualToAnchor:self.view.rightAnchor
@@ -59,7 +106,19 @@
 		constraintEqualToAnchor:self.view.topAnchor
 					   constant:8.0].active = YES;
 
-	[[EventBridge shared] setListener:self];
+	// history table should fill the rest
+	[self.historyContainer.topAnchor
+		constraintEqualToAnchor:self.selectDirectoryButton.bottomAnchor
+					   constant:8.0].active = YES;
+	[self.historyContainer.leftAnchor
+		constraintEqualToAnchor:self.view.leftAnchor
+					   constant:8.0].active = YES;
+	[self.historyContainer.rightAnchor
+		constraintEqualToAnchor:self.view.rightAnchor
+					   constant:-8.0].active = YES;
+	[self.historyContainer.bottomAnchor
+		constraintEqualToAnchor:self.view.bottomAnchor
+					   constant:-8.0].active = YES;
 }
 
 - (void) selectDirectory {
