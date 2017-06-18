@@ -23,7 +23,7 @@ func Desktop() UI {
 	}
 
 	log.Println("Creating new Cocoa UI")
-	C.initialize()
+	C.ui_init()
 	desktopUI = new(cocoaUI)
 	return desktopUI
 }
@@ -38,7 +38,7 @@ func (ui *cocoaUI) Run(out chan events.UserEvent, in chan events.BackgroundEvent
 	ui.in = in
 	ui.out = out
 	go ui.forwardEvents()
-	C.run()
+	C.ui_run()
 	return nil
 }
 
@@ -46,12 +46,12 @@ func (ui *cocoaUI) forwardEvent(e events.BackgroundEvent) {
 	switch v := e.(type) {
 	case events.SigIntEvent:
 		log.Println("Cocoa UI sees sig int, forwarding to NSApp")
-		C.shutdown()
+		C.bg_shutdown()
 
 	case events.SetRootEvent:
 		cpath := C.CString(v.Path)
 		defer C.free(unsafe.Pointer(cpath))
-		C.set_root(cpath)
+		C.bg_set_root(cpath)
 
 	case events.BeginRequestEvent:
 		cpath := C.CString(v.Path)
@@ -62,10 +62,10 @@ func (ui *cocoaUI) forwardEvent(e events.BackgroundEvent) {
 			path: cpath,
 		}
 
-		C.received_request(req)
+		C.bg_received_request(req)
 
 	case events.EndRequestEvent:
-		C.sent_response(&C.struct_ResponseMeta{
+		C.bg_sent_response(&C.struct_ResponseMeta{
 			seq:    C.int(v.Seq),
 			status: C.int(v.Status),
 			bytes:  C.int(v.Bytes),
