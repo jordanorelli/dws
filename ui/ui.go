@@ -1,18 +1,9 @@
 package ui
 
+import (
+	"github.com/jordanorelli/dws/events"
+)
+
 type UI interface {
-	Run(chan Event) error
-}
-
-type Event interface {
-	isUIEvent()
-}
-
-type event struct{}
-
-func (e event) isUIEvent() {}
-
-type SelectDirectoryEvent struct {
-	Path string
-	event
+	Run(chan events.UserEvent, chan events.BackgroundEvent) error
 }

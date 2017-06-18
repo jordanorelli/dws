@@ -6,6 +6,7 @@
 
 @property (nonatomic, strong) NSOpenPanel *selectDirectoryPanel;
 @property (nonatomic, strong) NSButton *selectDirectoryButton;
+@property (nonatomic, strong) NSTextField *selectedDirectoryText;
 
 @end
 
@@ -36,7 +37,11 @@
     [self.selectDirectoryButton setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.view addSubview:self.selectDirectoryButton];
 
-    // setup button constraints
+    // create label to show selected directory
+	self.selectedDirectoryText = [NSTextField labelWithString:@"(none)"];
+	[self.view addSubview:self.selectedDirectoryText];
+
+    // setup constraints
     [self.selectDirectoryButton.rightAnchor
         constraintEqualToAnchor:self.view.rightAnchor
                        constant:-8.0].active = YES;
@@ -53,8 +58,8 @@
             return;
         }
         NSURL *selected = [[self.selectDirectoryPanel URLs] objectAtIndex:0];
-        NSString *path = [selected path];
-        selectDirectory((GoString){path.UTF8String, path.length});
+        char *path = (char *)[[selected path] UTF8String];
+		selectDirectory(path);
     }];
 }
 

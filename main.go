@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 
+	"github.com/jordanorelli/dws/bg"
+	"github.com/jordanorelli/dws/events"
 	"github.com/jordanorelli/dws/ui"
 )
 
@@ -22,18 +25,17 @@ func exit(status int, t string, args ...interface{}) {
 }
 
 func main() {
+	runtime.LockOSThread()
+
 	log.Println("Creating new Desktop UI")
 	desktop := ui.Desktop()
 
-	c := make(chan ui.Event, 1)
-	go func() {
-		for e := range c {
-			log.Printf("UI Event: %v\n", e)
-		}
-	}()
+	uiEvents := make(chan events.UserEvent, 1)
+	bgEvents := make(chan events.BackgroundEvent, 1)
 
-	log.Println("Running Desktop UI")
-	if err := desktop.Run(c); err != nil {
+	go bg.Run(bgEvents, uiEvents)
+
+	if err := desktop.Run(uiEvents, bgEvents); err != nil {
 		exit(1, "UI Error: %v", err)
 	}
 }
