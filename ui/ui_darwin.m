@@ -4,15 +4,19 @@
 id defaultAutoreleasePool;
 id appDelegate;
 
-void Initialize(void) {
+void initialize() {
     defaultAutoreleasePool = [NSAutoreleasePool new];
     [NSApplication sharedApplication];
     [NSApp setDelegate: [[AppDelegate new] autorelease]];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 }
 
-int Run(void) {
+int run() {
     [NSApp run];
     [defaultAutoreleasePool drain];
     return 0;
+}
+
+void shutdown() {
+	[[NSApplication sharedApplication] terminate:nil];
 }

@@ -21,7 +21,7 @@ func Desktop() UI {
 	}
 
 	log.Println("Creating new Cocoa UI")
-	C.Initialize()
+	C.initialize()
 	desktopUI = new(cocoaUI)
 	return desktopUI
 }
@@ -35,8 +35,19 @@ func (ui *cocoaUI) Run(out chan events.UserEvent, in chan events.BackgroundEvent
 	log.Println("Running Desktop UI")
 	ui.in = in
 	ui.out = out
-	C.Run()
+	go ui.forwardEvents()
+	C.run()
 	return nil
+}
+
+func (ui *cocoaUI) forwardEvents() {
+	for e := range ui.in {
+		switch e.(type) {
+		case events.SigIntEvent:
+			log.Println("Cocoa UI sees sig int, forwarding to NSApp")
+			C.shutdown()
+		}
+	}
 }
 
 //export selectDirectory

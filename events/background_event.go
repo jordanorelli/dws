@@ -8,3 +8,5 @@ type BackgroundEvent interface {
 type backgroundEvent struct{ event }
 
 func (e backgroundEvent) isBackgroundEvent() {}
+
+type SigIntEvent struct{ backgroundEvent }

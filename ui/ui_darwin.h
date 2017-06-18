@@ -1,2 +1,3 @@
-void Initialize(void);
-int Run(void);
+void initialize();
+int run();
+void shutdown();
