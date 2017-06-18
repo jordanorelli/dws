@@ -1,4 +1,5 @@
 #import "RequestHistory.h"
+#import "RequestHistoryItem.h"
 
 @interface RequestHistory ()
 @property (strong) NSMutableArray *items;
@@ -20,19 +21,21 @@
 
 - (id) tableView:(NSTableView *)view objectValueForTableColumn:(NSTableColumn *)column row:(NSInteger) row {
 	NSLog(@"[RequestHistory] objectValueForTableColumn: %@ row: %zd", column, row);
-	NSValue *val = [[self items] objectAtIndex:row];
-	if (!val) {
+	RequestHistoryItem *item = [[self items] objectAtIndex:row];
+	if (!item) {
 		return nil;
 	}
-	RequestMeta meta;
-	[val getValue:&meta];
 
 	if ([[column identifier] isEqualToString:@"id"]) {
-		return [NSNumber numberWithInt:meta.seq];
+		return [NSNumber numberWithInt:[item seq]];
 	} else if ([[column identifier] isEqualToString:@"status"]) {
-		return @"???";
+		if ([item status] == 0) {
+			return @"???";
+		} else {
+			return [NSNumber numberWithInt:[item status]];
+		}
 	} else if ([[column identifier] isEqualToString:@"path"]) {
-		return [NSString stringWithUTF8String:meta.path];
+		return [item path];
 	} else {
 		return @"fuck";
 	}
@@ -40,11 +43,13 @@
 
 - (void) addRequestItem:(RequestMeta *)meta {
 	NSLog(@"[RequestHistory] add request item");
-	[[self items] addObject:[NSValue valueWithBytes:meta objCType:@encode(RequestMeta)]];
+	[[self items] addObject:[RequestHistoryItem itemWithRequestMeta:meta]];
 }
 
 - (void) addResponseItem:(ResponseMeta *)meta {
 	NSLog(@"[RequestHistory] add response item");
+	id item = [[self items] objectAtIndex:meta->seq-1];
+	[item updateWithResponseMeta:meta];
 }
 
 @end
