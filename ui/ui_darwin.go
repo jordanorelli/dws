@@ -58,13 +58,18 @@ func (ui *cocoaUI) forwardEvent(e events.BackgroundEvent) {
 		defer C.free(unsafe.Pointer(cpath))
 
 		req := &C.struct_RequestMeta{
+			seq:  C.int(v.Seq),
 			path: cpath,
 		}
 
-		C.begin_request(req)
+		C.received_request(req)
 
 	case events.EndRequestEvent:
-		C.end_request()
+		C.sent_response(&C.struct_ResponseMeta{
+			seq:    C.int(v.Seq),
+			status: C.int(v.Status),
+			bytes:  C.int(v.Bytes),
+		})
 	}
 }
 

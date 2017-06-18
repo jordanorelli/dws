@@ -28,12 +28,12 @@ void set_root(char *path) {
 	[listener serverDidSetRoot:[NSString stringWithUTF8String:path]];
 }
 
-void begin_request(RequestMeta *meta) {
+void received_request(RequestMeta *meta) {
 	id listener = [[EventBridge shared] listener];
-	[listener serverDidBeginHandlingRequest:meta];
+	[listener serverDidReceiveRequest:meta];
 }
 
-void end_request() {
+void sent_response(ResponseMeta *meta) {
 	id listener = [[EventBridge shared] listener];
-	[listener serverDidFinishHandlingRequest];
+	[listener serverDidWriteResponse:meta];
 }

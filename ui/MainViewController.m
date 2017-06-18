@@ -79,12 +79,12 @@
 	[self.selectedDirectoryText setStringValue:path];
 }
 
-- (void) serverDidBeginHandlingRequest:(RequestMeta *)meta {
-	NSLog(@"[MainViewController] request start: %s", meta->path);
+- (void) serverDidReceiveRequest:(RequestMeta *)meta {
+	NSLog(@"[MainViewController] request start: {%d %s}", meta->seq, meta->path);
 }
 
-- (void) serverDidFinishHandlingRequest {
-	NSLog(@"[MainViewController] request finish");
+- (void) serverDidWriteResponse:(ResponseMeta *)meta {
+	NSLog(@"[MainViewController] request finish: {%d %d %d}", meta->seq, meta->status, meta->bytes);
 }
 
 @end

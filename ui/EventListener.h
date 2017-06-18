@@ -3,7 +3,7 @@
 
 @protocol EventListener
 - (void) serverDidSetRoot:(NSString *)path;
-- (void) serverDidBeginHandlingRequest:(RequestMeta *)meta;
-- (void) serverDidFinishHandlingRequest;
+- (void) serverDidReceiveRequest:(RequestMeta *)meta;
+- (void) serverDidWriteResponse:(ResponseMeta *)meta;
 @end
 

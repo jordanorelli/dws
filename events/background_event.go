@@ -17,10 +17,14 @@ type SetRootEvent struct {
 }
 
 type BeginRequestEvent struct {
+	Seq  int
 	Path string
 	backgroundEvent
 }
 
 type EndRequestEvent struct {
+	Seq    int
+	Status int
+	Bytes  int
 	backgroundEvent
 }
