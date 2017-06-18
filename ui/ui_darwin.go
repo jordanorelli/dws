@@ -2,7 +2,6 @@ package ui
 
 import (
 	"log"
-	"unsafe"
 
 	"github.com/jordanorelli/dws/events"
 )
@@ -50,26 +49,21 @@ func (ui *cocoaUI) forwardEvent(e events.BackgroundEvent) {
 
 	case events.SetRootEvent:
 		cpath := C.CString(v.Path)
-		defer C.free(unsafe.Pointer(cpath))
 		C.bg_set_root(cpath)
 
 	case events.BeginRequestEvent:
 		cpath := C.CString(v.Path)
-		defer C.free(unsafe.Pointer(cpath))
-
-		req := &C.struct_RequestMeta{
-			seq:  C.int(v.Seq),
-			path: cpath,
-		}
-
+		req := (*C.struct_RequestMeta)(C.malloc(C.sizeof_struct_RequestMeta))
+		req.seq = C.int(v.Seq)
+		req.path = cpath
 		C.bg_received_request(req)
 
 	case events.EndRequestEvent:
-		C.bg_sent_response(&C.struct_ResponseMeta{
-			seq:    C.int(v.Seq),
-			status: C.int(v.Status),
-			bytes:  C.int(v.Bytes),
-		})
+		res := (*C.struct_ResponseMeta)(C.malloc(C.sizeof_struct_ResponseMeta))
+		res.seq = C.int(v.Seq)
+		res.status = C.int(v.Status)
+		res.bytes = C.int(v.Bytes)
+		C.bg_sent_response(res)
 	}
 }
 

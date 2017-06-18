@@ -26,6 +26,7 @@ void bg_shutdown() {
 void bg_set_root(char *path) {
 	id listener = [[EventBridge shared] listener];
 	[listener serverDidSetRoot:[NSString stringWithUTF8String:path]];
+	free(path);
 }
 
 void bg_received_request(RequestMeta *meta) {
