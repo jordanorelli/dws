@@ -2,6 +2,7 @@
 #import "MainViewController.h"
 #import "MainView.h"
 #import "EventBridge.h"
+#import "RequestHistory.h"
 
 @interface MainViewController ()
 
@@ -10,6 +11,7 @@
 @property (nonatomic, strong) NSTextField *selectedDirectoryText;
 @property (nonatomic, strong) NSScrollView *historyContainer;
 @property (nonatomic, strong) NSTableView *historyTable;
+@property (nonatomic, strong) RequestHistory *history;
 
 @end
 
@@ -58,6 +60,7 @@
 }
 
 - (void) createHistoryTable {
+	[self setHistory:[RequestHistory new]];
 	NSScrollView *tableContainer = [[NSScrollView alloc] init];
 	[tableContainer setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[tableContainer setHasVerticalScroller:YES];
@@ -68,6 +71,7 @@
 	[tableView setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[tableView setFocusRingType:NSFocusRingTypeNone];
 	[tableView setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleNone];
+	[tableView setDataSource:self.history];
 
 	NSTableColumn *idColumn = [[NSTableColumn alloc] initWithIdentifier:@"id"];
 	[idColumn setTitle:@"id"];
@@ -140,10 +144,14 @@
 
 - (void) serverDidReceiveRequest:(RequestMeta *)meta {
 	NSLog(@"[MainViewController] request start: {%d %s}", meta->seq, meta->path);
+	[[self history] addRequestItem:meta];
+	[[self historyTable] reloadData];
 }
 
 - (void) serverDidWriteResponse:(ResponseMeta *)meta {
 	NSLog(@"[MainViewController] request finish: {%d %d %d}", meta->seq, meta->status, meta->bytes);
+	[[self history] addResponseItem:meta];
+	[[self historyTable] reloadData];
 }
 
 @end
