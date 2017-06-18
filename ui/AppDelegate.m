@@ -1,6 +1,12 @@
 #import "AppDelegate.h"
 #import "MainWindowController.h"
 
+@interface AppDelegate ()
+
+@property (nonatomic, strong) MainWindowController *windowController;
+
+@end
+
 @implementation AppDelegate
 
 // Application Startup ------------------------------------------------------{{{
@@ -59,14 +65,10 @@
 
 - (void) createMainWindow {
     NSLog(@"[AppDelegate] Creating Main Window");
-    // TODO: make a singleton? retain in a property of appdelegate?
-    // MainWindowController *windowController = [[[MainWindowController alloc] init] retain];
-    MainWindowController *windowController = [[MainWindowController alloc] init];
-    // NSLog(@"Window loaded: %d", [windowController isWindowLoaded]);
-    [windowController showWindow:self];
+    self.windowController = [[MainWindowController alloc] init];
+    [self.windowController showWindow:self];
 }
 
 // --------------------------------------------------------------------------}}}
-
 @end
 

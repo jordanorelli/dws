@@ -1,5 +1,6 @@
-#include <Cocoa/Cocoa.h>
-#include "AppDelegate.h"
+#import <Cocoa/Cocoa.h>
+#import "AppDelegate.h"
+#import "EventBridge.h"
 
 id defaultAutoreleasePool;
 id appDelegate;
@@ -19,4 +20,9 @@ int run() {
 
 void shutdown() {
 	[[NSApplication sharedApplication] terminate:nil];
+}
+
+void set_root(char *path) {
+	id listener = [[EventBridge shared] listener];
+	[listener serverDidSetRoot:[NSString stringWithUTF8String:path]];
 }

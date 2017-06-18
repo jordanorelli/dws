@@ -29,6 +29,7 @@ func (bg *background) run() {
 		switch v := e.(type) {
 		case events.UserSelectedDirectory:
 			bg.setRoot(v.Path)
+			bg.out <- events.SetRootEvent{Path: v.Path}
 		}
 	}
 }

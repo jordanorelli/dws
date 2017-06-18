@@ -1,6 +1,7 @@
 #import "_cgo_export.h"
 #import "MainViewController.h"
 #import "MainView.h"
+#import "EventBridge.h"
 
 @interface MainViewController ()
 
@@ -38,16 +39,27 @@
     [self.view addSubview:self.selectDirectoryButton];
 
     // create label to show selected directory
-	self.selectedDirectoryText = [NSTextField labelWithString:@"(none)"];
+	self.selectedDirectoryText = [NSTextField labelWithString:@"no directory selected"];
+    [self.selectedDirectoryText setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[self.view addSubview:self.selectedDirectoryText];
 
-    // setup constraints
+    // place button in top right
     [self.selectDirectoryButton.rightAnchor
         constraintEqualToAnchor:self.view.rightAnchor
                        constant:-8.0].active = YES;
     [self.selectDirectoryButton.topAnchor
         constraintEqualToAnchor:self.view.topAnchor
                        constant:8.0].active = YES;
+
+	// place directory selection in top left
+	[self.selectedDirectoryText.leftAnchor
+		constraintEqualToAnchor:self.view.leftAnchor
+					   constant:8.0].active = YES;
+	[self.selectedDirectoryText.topAnchor
+		constraintEqualToAnchor:self.view.topAnchor
+					   constant:8.0].active = YES;
+
+	[[EventBridge shared] setListener:self];
 }
 
 - (void) selectDirectory {
@@ -91,6 +103,10 @@
 - (void) viewDidLayout {
     NSLog(@"[MainViewController] viewDidLayout");
     return [super viewDidLayout];
+}
+
+- (void) serverDidSetRoot:(NSString *)path {
+	[self.selectedDirectoryText setStringValue:path];
 }
 
 @end
