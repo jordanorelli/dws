@@ -1,7 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import "AppDelegate.h"
 #import "EventBridge.h"
-#import "ui_darwin.h"
+#import "ui.h"
 
 id defaultAutoreleasePool;
 id appDelegate;

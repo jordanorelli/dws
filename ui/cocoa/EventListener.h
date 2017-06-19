@@ -1,5 +1,5 @@
 #import <Cocoa/Cocoa.h>
-#import "ui_darwin.h"
+#import "ui.h"
 
 @protocol EventListener
 - (void) serverDidSetRoot:(NSString *)path;

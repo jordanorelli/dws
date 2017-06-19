@@ -1,5 +1,5 @@
 #import <Cocoa/Cocoa.h>
-#import "ui_darwin.h"
+#import "ui.h"
 
 @interface RequestHistory : NSObject <NSTableViewDataSource>
 - (void) addRequestItem:(RequestMeta *)meta;
