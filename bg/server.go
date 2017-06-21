@@ -11,7 +11,7 @@ import (
 
 type server struct {
 	port int
-	root string
+	fs   http.Handler
 	out  chan events.BackgroundEvent
 }
 
@@ -29,15 +29,15 @@ func (s *server) listen() {
 
 func (s *server) setRoot(path string) {
 	log.Printf("server setting root to %s\n", path)
-	s.root = path
+	s.fs = http.FileServer(http.Dir(path))
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if s.root == "" {
+	if s.fs == nil {
 		writeNotInitializedResponse(w)
 		return
 	}
-	fmt.Fprintf(w, "root: %s", s.root)
+	s.fs.ServeHTTP(w, r)
 }
 
 func writeNotInitializedResponse(w http.ResponseWriter) {

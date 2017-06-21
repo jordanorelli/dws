@@ -20,7 +20,6 @@
 }
 
 - (id) tableView:(NSTableView *)view objectValueForTableColumn:(NSTableColumn *)column row:(NSInteger) row {
-	NSLog(@"[RequestHistory] objectValueForTableColumn: %@ row: %zd", column, row);
 	RequestHistoryItem *item = [[self items] objectAtIndex:row];
 	if (!item) {
 		return nil;
@@ -42,12 +41,10 @@
 }
 
 - (void) addRequestItem:(RequestMeta *)meta {
-	NSLog(@"[RequestHistory] add request item");
 	[[self items] addObject:[RequestHistoryItem itemWithRequestMeta:meta]];
 }
 
 - (void) addResponseItem:(ResponseMeta *)meta {
-	NSLog(@"[RequestHistory] add response item");
 	id item = [[self items] objectAtIndex:meta->seq-1];
 	[item updateWithResponseMeta:meta];
 }

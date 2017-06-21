@@ -18,12 +18,10 @@
 @implementation MainViewController
 
 - (void) loadView {
-    NSLog(@"[MainViewController] loadView");
     self.view = [[MainView alloc] init];
 }
 
 - (void) viewDidLoad {
-    NSLog(@"[MainViewController] viewDidLoad");
     [super viewDidLoad];
 
     // set window dimensions
@@ -65,6 +63,7 @@
 	[tableContainer setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[tableContainer setHasVerticalScroller:YES];
 	[tableContainer setFocusRingType:NSFocusRingTypeNone];
+	[tableContainer setBorderType:NSBezelBorder];
 	[self.view addSubview:tableContainer];
 
 	NSTableView *tableView = [[NSTableView alloc] init];
@@ -126,7 +125,6 @@
 }
 
 - (void) selectDirectory {
-    NSLog(@"[MainViewController] select directory start");
     [self.selectDirectoryPanel beginWithCompletionHandler:^(NSInteger result) {
         if (result != NSFileHandlingPanelOKButton) {
             NSLog(@"[MainViewController] user canceled select directory window");
@@ -143,13 +141,11 @@
 }
 
 - (void) serverDidReceiveRequest:(RequestMeta *)meta {
-	NSLog(@"[MainViewController] request start: {%d %s}", meta->seq, meta->path);
 	[[self history] addRequestItem:meta];
 	[[self historyTable] reloadData];
 }
 
 - (void) serverDidWriteResponse:(ResponseMeta *)meta {
-	NSLog(@"[MainViewController] request finish: {%d %d %d}", meta->seq, meta->status, meta->bytes);
 	[[self history] addResponseItem:meta];
 	[[self historyTable] reloadData];
 }
