@@ -96,11 +96,23 @@ The project consists of the following packages:
 The application's entry point is defined in Go.
 [`main.go`](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/main.go)
 contains the definition of [the `main`
-function](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/main.go#L27):
+function](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/main.go#L27),
+which gives us a bird's-eye view of the application's structure:
 
 ``` go
 func main() {
-    // ...
+	runtime.LockOSThread()
+
+	desktop := ui.Desktop()
+
+	uiEvents := make(chan events.UserEvent, 1)
+	bgEvents := make(chan events.BackgroundEvent, 1)
+
+	go bg.Run(bgEvents, uiEvents)
+
+	if err := desktop.Run(uiEvents, bgEvents); err != nil {
+		exit(1, "UI Error: %v", err)
+	}
 }
 ```
 
@@ -109,18 +121,28 @@ We start by [calling
 to lock the `main` function to the main thread of the application. This is
 because of a Cocoa requirement: OSX will only send events to an application's
 main thread, so we need to make sure that we're launching our Cocoa app from
-the main thread.
+the main thread. Boring.
 
 Next, we initialize our Cocoa app by [calling
 `ui.Desktop()`](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/main.go#L31).
-Our `Desktop` function is defined [in
-`ui/ui_darwin.go`](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/ui/ui_darwin.go#L7),
-which is compiled on OSX and OSX alone because the file ends with `_darwin.go`
-(more about conditional compilation in Go can be found [here on Dave Cheney's
-blog](https://dave.cheney.net/2013/10/12/how-to-use-conditional-compilation-with-the-go-build-tool)).
-We could conceivably write a drop-in win32 presentation layer by defining a
-conformant `ui.Desktop()` function in `ui_windows.go`, but no such win32
-implementation has been written yet.
+The UI itself is written to be opaque to the backend so that we can build many
+different UI implementations over the same backend.
+
+Next we create a pair of channels, `uiEvents` and `bgEvents`. These channels
+will be passed to both the backend and the frontend. The UI will listen on the
+`bgEvents` channel for messages from the backend and send any user events such
+as clicks or menu selections as `events.UserEvent` messages on the `uiEvents`
+channel. Similarly, the backend will listen on the `uiEvents` channel to accept
+and respond to the user's actions. The `bgEvents` channel is used by the
+backend to send messages that should be displayed to the user. Since our
+application is an http server, that's things like "started handling an http
+request" and "finished handling an http request". Next we kick off the
+background in its own goroutine so that it can run independently of the UI's
+run loop. Finally, we call `desktop.Run` to start the application's run loop
+and block until it has completed. We'll talk about the presentation layer
+first, then come back to the background server functionality.
+
+## setting up the Cocoa UI
 
 Our [`ui.Desktop`
 definition](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/ui/ui_darwin.go#L7-L9)
@@ -132,12 +154,50 @@ func Desktop() UI {
 }
 ```
 
-This is where we first encounter [the `ui/cocoa`
-package](https://github.com/jordanorelli/dws/tree/8dee9e5b564edb92c6cbd10103701495dd33f5d6/ui/cocoa).
-Since we've imported the `cocoa` package, the Go tool compiles all of the
-`.go` files, which is just one file:
-[`ui.go`](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/ui/cocoa/ui.go). In this file we see a cgo import statement:
+Since our `Desktop` function is defined [in
+`ui/ui_darwin.go`](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/ui/ui_darwin.go#L7),
+it will only be compiled on MacOS. The `_darwin.go` suffix tells the Go
+compiler to only compile the file on Darwin. Attempting to compile this program
+will fail on all other operating systems because `ui.Desktop` will only be
+defined on MacOS. (more about conditional compilation in Go can be found [here
+on Dave Cheney's
+blog](https://dave.cheney.net/2013/10/12/how-to-use-conditional-compilation-with-the-go-build-tool)).
+We could conceivably write a win32 presentation layer by defining a conformant
+`ui.Desktop()` function in `ui_windows.go`, but no such win32 implementation
+has been written yet. In essence, this file tells the Go compiler to only
+define the `Desktop` function on MacOS, and that its invocations should be
+forwarded to `cocoa.Desktop`. We'll use the `ui/cocoa` package to contain all
+of our Mac-specific code.
 
+### the cgo import
+
+Since we've imported the `cocoa` package, the Go tool compiles all of the `.go`
+files, which is just one file:
+[`ui.go`](https://github.com/jordanorelli/dws/blob/8dee9e5b564edb92c6cbd10103701495dd33f5d6/ui/cocoa/ui.go),
+which contains our `cocoa.Desktop` definition:
+
+``` go
+func Desktop() *ui {
+	if instance != nil {
+		return instance
+	}
+	C.ui_init()
+	instance = new(ui)
+	return instance
+}
+```
+
+`instance` in this case is just a pointer to a package global, which exists to
+ensure that we only attempt to initialize the Cocoa UI once, like a poorly-made
+singleton with no synchronization. Not very strong, but fine for our use case.
+We then initialize our Cocoa app by calling `C.ui_init`. This demands closer
+inspection.
+
+First, it should be immediately clear to Go programmers that we're calling what
+appears to be an unexported function on a different package. `C` in this case,
+and in all cases of cgo, is not a package in the sense that it is a true Go
+package: it is a pseudo-package that acts as an interface to our C code. Let's
+take a look at how we imported this package:
 
 ``` go
 /*
@@ -149,15 +209,91 @@ Since we've imported the `cocoa` package, the Go tool compiles all of the
 import "C"
 ```
 
-This is where the Go tool observes that it needs to use cgo to invoke a C
-compiler. The `#cgo CFLAGS` line allows us to pass arguments to our C compiler
-(clang). Specifically, we enable Objective-C compilation. `LDFLAGS` allows us
-to specify linker flags: this is where we ask the linker to link against the
-Cocoa framework. The next two lines are plain C. We could write more C code
-here, but I prefer to keep it to header includes and to avoid writing too much
-mixed Go and C in the same file. `<stdlib.h>` has to be included to define
-`C.free`, which allows us to call C's `free` from Go to release memory
-allocated on the C heap. We also include `ui.h`, our header file for our Cocoa
-ui. We'll take a look at that in a second.
+This comment block is a [cgo](https://golang.org/cmd/cgo/) import statement. It
+instructs the Go tool to use cgo, which will in turn, invoke a C compiler. In
+our case, that means clang, because that is the default C compiler on Darwin.
+More literally: clang is selected because the value of the `CC` environment
+variable is `clang`. We provide a few options to clang that are relevant to our
+project using the `#cgo` statements. The `CFLAGS` statement allows us to pass
+arguments to clang. Specifically, we enable Objective-C compilation. `LDFLAGS`
+allows us to specify linker flags: this is where we ask the linker to link
+against the Cocoa framework. Cgo will follow similar rules to the rest of the
+Go tool: all of the source code files in the directory will be included in the
+compilation. This means _all_ of the `.go`, `.h`, and `.m` files will be
+compiled and included in our binary automatically, and we don't need to write a
+Makefile. (If you're curious about compiler caching, it's the same situation as
+Go in general: `go build` will always rebuild the entire application, while `go
+install` will cache the intermediate objects. `go install` is, in general,
+faster beyond the first compile, but since it moves your binary, we use `go
+build` in our explainers later because it is simpler to reason about.)
 
+The next two lines are plain C. We could write more C code here if we so
+desired, but restricting ourselves to only includes helps to keep our languages
+in order. `<stdlib.h>` has to be included in order to define `C.free`, which
+allows us to call C's `free` from Go to release memory allocated on the C heap.
+
+We also include
+[`ui.h`](https://github.com/jordanorelli/dws/blob/360224ce612984b83ad033a549192cbd0df08672/ui/cocoa/ui.h),
+our header file for our Cocoa ui. We see in this file the definition for the
+`ui_init` function:
+
+``` c
+void ui_init();
+```
+
+This C declaration corresponds to the `C.ui_init()` call we saw in `cocoa/ui.go`. Its implementation can be seen [in `ui.m`](https://github.com/jordanorelli/dws/blob/360224ce612984b83ad033a549192cbd0df08672/ui/cocoa/ui.m#L9-L14):
+
+### setting up a Cocoa application without XCode or Nib files
+
+``` objective-c
+void ui_init() {
+    defaultAutoreleasePool = [NSAutoreleasePool new];
+    [NSApplication sharedApplication];
+    [NSApp setDelegate: [[AppDelegate new] autorelease]];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+}
+```
+
+We start by initializing our
+[NSAutoreleasePool](https://developer.apple.com/documentation/foundation/nsautoreleasepool),
+which is used for
+[reference-counting](https://en.wikipedia.org/wiki/Reference_counting) in both
+our code and in Cocoa's code. Without this line, any Objective-C objects that
+were memory-managed using `autorelease` messages will never be released, and
+our application will leak memory. Even if we didn't use `autorelease`
+ourselves, Cocoa uses it internally, so leaving this off would cause Cocoa to
+leak. We'll see quickly that the differing memory management systems between
+Go, C, and Objective-C have noticeable effects on our application.
+
+Next, we initialize our
+[NSApplication](https://developer.apple.com/documentation/appkit/nsapplication?language=objc),
+the base application type for managing a Mac application. Sending a
+[`sharedApplication`
+message](https://developer.apple.com/documentation/appkit/nsapplication/1428360-sharedapplication?language=objc)
+to NSApplication returns the application instance, creating it if it doesn't
+exist yet. We're not interested in the return value, we just call this function
+for its side effects.
+
+Next we set our application's delegate with a [`setDelegate`
+message](https://developer.apple.com/documentation/appkit/nsapplication/1428705-delegate?language=objc).
+It turns out that Cocoa's extensive use of the delegation pattern makes Cocoa
+programming very easy for Go programmers to reason about. An Objective-C
+_delegate_ property in the general case is a reference to an object that
+implements a _protocol_ in the Objective-C parlance, but for a Go programmer,
+we can think of a delegate property as being a struct field with an interface
+type. NSApplication's `delegate` property is of [`NSApplicationDelegate`
+type](https://developer.apple.com/documentation/appkit/nsapplicationdelegate?language=objc),
+which is a protocol.
+
+Our AppDelegate is declared [in `AppDelegate.h`](https://github.com/jordanorelli/dws/blob/360224ce612984b83ad033a549192cbd0df08672/ui/cocoa/AppDelegate.h#L4-L5):
+
+``` objective-c
+@interface AppDelegate : NSObject <NSApplicationDelegate>
+@end
+```
+
+and implemented [in
+`AppDelegate.m`](https://github.com/jordanorelli/dws/blob/360224ce612984b83ad033a549192cbd0df08672/ui/cocoa/AppDelegate.m).
+We'll take a look at some of the methods we've decided to implement when we
+send our `NSApplication` a `run` message.
 
