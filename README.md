@@ -38,7 +38,7 @@ bundle](https://developer.apple.com/app-store/app-bundles/). The Go tool is
 not aware of the App Bundle structure, it is only responsible for building the
 executable.
 
-###building an app bundle
+### building an app bundle
 
 Building an App Bundle is reasonably straightforward. The App Bundle is just a
 special folder layout. A Makefile is included in the project to simplify this
