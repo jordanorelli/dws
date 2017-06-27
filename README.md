@@ -276,12 +276,14 @@ for its side effects.
 
 Next we set our application's delegate with a [`setDelegate`
 message](https://developer.apple.com/documentation/appkit/nsapplication/1428705-delegate?language=objc).
-It turns out that Cocoa's extensive use of the delegation pattern makes Cocoa
-programming very easy for Go programmers to reason about. An Objective-C
-_delegate_ property in the general case is a reference to an object that
-implements a _protocol_ in the Objective-C parlance, but for a Go programmer,
-we can think of a delegate property as being a struct field with an interface
-type. NSApplication's `delegate` property is of [`NSApplicationDelegate`
+It turns out that Cocoa's extensive use of the [delegation
+pattern](https://developer.apple.com/library/content/documentation/General/Conceptual/DevPedia-CocoaCore/Delegation.html)
+makes Cocoa programming very easy for Go programmers to reason about. An
+Objective-C _delegate_ property in the general case is a reference to an
+object that implements a _protocol_ in the Objective-C parlance, but for a Go
+programmer, we can think of a delegate property as being a struct field with
+an interface type. NSApplication's `delegate` property is of
+[`NSApplicationDelegate`
 type](https://developer.apple.com/documentation/appkit/nsapplicationdelegate?language=objc),
 which is a protocol.
 
